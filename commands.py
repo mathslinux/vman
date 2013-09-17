@@ -2,6 +2,7 @@
 
 import os
 import argparse
+import shutil
 from ConfigParser import ConfigParser
 from excp import CommandError
 from manager import VMManager
@@ -46,15 +47,17 @@ class Add(object):
         """
 
     def run(self):
-        os.system('cp %s %s' % (self.config_file, self.vman_dir))
+        src_file = self.config_file
+        dest_file = os.path.join(self.vman_dir, os.path.basename(src_file))
+
+        shutil.copyfile(src_file, dest_file)
 
         # Create a new entry into our vman config file to announce our vm
         parser = ConfigParser()
         parser.read(vman_config)
 
         parser.add_section(self.vm_name)
-        parser.set(self.vm_name, 'config', os.path.join(self.vman_dir,
-                                                        self.config_file))
+        parser.set(self.vm_name, 'config', dest_file)
         parser.write(open(vman_config, 'w'))
 
 
