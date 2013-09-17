@@ -20,9 +20,8 @@ def main(args):
 
     try:
         run_command(args[0], args)
-    except Exception as detail:
-        print traceback.print_exc()
-        return
+    except:
+        traceback.print_exc()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
