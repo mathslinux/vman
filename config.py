@@ -47,42 +47,42 @@ class VMConfig(object):
         else:
             mem.text = str(512 * 1024)
 
-    def _parse_disk_section(self, parser):
+    def _parse_device_section(self, parser, name, entries):
         """
-        Parse disk section and return a list like:
+        Parse device section, e.g, net, disk, and return a list like:
         [{'index': '1', 'file': 'vm1.qcow2', 'format': 'qcow2'},
-         {'index':1, 'file': 'disk.qcow2', 'format': 'qcow2'}]
+         {'index':2, 'file': 'disk.qcow2', 'format': 'qcow2'}]
         """
-        disk_list = []
-        entrys = ['file', 'format', 'index']
+        device_list = []
         for section in parser.sections():
-            if section.startswith('disk'):
-                disk = dict()
-                for e in entrys:
+            if section.startswith(name):
+                device = dict()
+                for e in entries:
                     try:
                         value = parser.get(section, e)
-                        disk[e] = value
+                        device[e] = value
                     except NoOptionError:
                         pass
-                if disk:
-                    disk_list.append(disk)
+                if device:
+                    device_list.append(device)
 
-        if not disk_list:
-            raise ConfigError('no disk config!')
+        if not device_list:
+            raise ConfigError('no %s config!' % (name))
 
-        # If there is only a disk in config file and index is not defined,
-        # we set the value of index to 1 by default
-        if len(disk_list) == 1:
-            disk = disk_list[0]
-            if 'index' not in disk.keys():
-                disk['index'] = '1'
+        # If there is only a device of this type in config file and index is
+        # not defined, we set the value of index to 1 by default
+        if len(device_list) == 1:
+            device = device_list[0]
+            if 'index' not in device.keys():
+                device['index'] = '1'
 
-        # Check whether all config needed by disk have been defined
-        for disk in disk_list:
-            if not set(entrys).issubset(disk.keys()):
-                raise ConfigError('file or format or index are not defined!')
+        # Check whether all config needed by device have been defined
+        for device in device_list:
+            if not set(entries).issubset(device.keys()):
+                raise ConfigError('Please provide more details for %s '
+                                  'device' % (name))
 
-        return disk_list
+        return device_list
 
     def _parse_disk(self, parser, domain):
         """
@@ -90,7 +90,8 @@ class VMConfig(object):
         """
 
         devices = domain.find('devices')
-        for disk in self._parse_disk_section(parser):
+        for disk in self._parse_device_section(parser, 'disk',
+                                               ['file', 'format', 'index']):
             node = ET.SubElement(devices, 'disk', type='file', device='disk')
 
             index = int(disk['index'])
@@ -115,17 +116,22 @@ class VMConfig(object):
           <source bridge="ctmgmt"/>
           </interface>
         """
+        self._parse_device_section(parser, 'net', ['mac', 'index'])
         devices = domain.find('devices')
-        mac = parser.get('net', 'mac')
         bridges = [b.split('/')[-2] for b in glob.glob('/sys/class/net/*/bridge')]
+        net_list = self._parse_device_section(parser, 'net', ['mac', 'index'])
+        # TODO: NAT support, index limitation
         if bridges:
-            # FIXME: dont hard code
-            iface = ET.SubElement(devices, 'interface', type='bridge')
-            ET.SubElement(iface, 'address', domain='0x0000', function='0x0',
-                          slot='0x3', type='pci', bus='0x00')
-            ET.SubElement(iface, 'mac', address=mac)
-            ET.SubElement(iface, 'model', type='virtio')
-            ET.SubElement(iface, 'source', bridge=bridges[0])
+            for net in net_list:
+                index = int(net['index'])
+                slot = str(hex(3 + index - 1))  # PCI address:0x6, 0x7, 0x8
+                node = ET.SubElement(devices, 'interface', type='bridge')
+
+                ET.SubElement(node, 'address', function='0x0', slot=slot,
+                              type='pci', bus='0x00')
+                ET.SubElement(node, 'mac', address=net['mac'])
+                ET.SubElement(node, 'model', type='virtio')
+                ET.SubElement(node, 'source', bridge=bridges[0])
 
     def _parse_display(self, parser, domain):
         devices = domain.find('devices')
