@@ -1,4 +1,5 @@
-from ConfigParser import ConfigParser
+from ConfigParser import ConfigParser, NoOptionError
+from excp import ConfigError
 import xml.etree.cElementTree as ET
 import glob
 
@@ -46,28 +47,62 @@ class VMConfig(object):
         else:
             mem.text = str(512 * 1024)
 
-    def _parse_disk(self, parser, domain):
-        index = 0
-        devices_node = domain.find('devices')
+    def _parse_disk_section(self, parser):
+        """
+        Parse disk section and return a list like:
+        [{'index': '1', 'file': 'vm1.qcow2', 'format': 'qcow2'},
+         {'index':1, 'file': 'disk.qcow2', 'format': 'qcow2'}]
+        """
+        disk_list = []
+        entrys = ['file', 'format', 'index']
         for section in parser.sections():
-            if section.startswith('disk.'):
-                # FIXME: dont hard code
-                disk_file = parser.get(section, 'file')
-                format = parser.get(section, 'format')
-                disk = ET.SubElement(devices_node, 'disk', type='file',
-                                     device='disk')
-                ET.SubElement(disk, 'source', file=disk_file)
-                ET.SubElement(disk, 'target', bus='virtio',
-                              dev=('vd' + chr(ord('a') + index)))
-                ET.SubElement(disk, 'address', type='pci', bus='0x00',
-                              slot=str(hex(6 + index)), function='0x0')
-                ET.SubElement(disk, 'driver', type=format, name='qemu')
-                try:
-                    boot_index = parser.get(section, 'index')
-                    ET.SubElement(disk, 'boot', order=boot_index)
-                except:
-                    pass
-                index += 1
+            if section.startswith('disk'):
+                disk = dict()
+                for e in entrys:
+                    try:
+                        value = parser.get(section, e)
+                        disk[e] = value
+                    except NoOptionError:
+                        pass
+                if disk:
+                    disk_list.append(disk)
+
+        if not disk_list:
+            raise ConfigError('no disk config!')
+
+        # If there is only a disk in config file and index is not defined,
+        # we set the value of index to 1 by default
+        if len(disk_list) == 1:
+            disk = disk_list[0]
+            if 'index' not in disk.keys():
+                disk['index'] = '1'
+
+        # Check whether all config needed by disk have been defined
+        for disk in disk_list:
+            if not set(entrys).issubset(disk.keys()):
+                raise ConfigError('file or format or index are not defined!')
+
+        return disk_list
+
+    def _parse_disk(self, parser, domain):
+        """
+        - parse disk section
+        """
+
+        devices = domain.find('devices')
+        for disk in self._parse_disk_section(parser):
+            node = ET.SubElement(devices, 'disk', type='file', device='disk')
+
+            index = int(disk['index'])
+            dev = 'vd' + chr(ord('a') + index - 1)  # vda, vdb, vdc ...
+            slot = str(hex(6 + index - 1))          # PCI address:0x6, 0x7, 0x8
+
+            ET.SubElement(node, 'boot', order=disk['index'])
+            ET.SubElement(node, 'source', file=disk['file'])
+            ET.SubElement(node, 'target', bus='virtio', dev=dev)
+            ET.SubElement(node, 'address', type='pci', bus='0x00',
+                          slot=slot, function='0x0')
+            ET.SubElement(node, 'driver', type=disk['format'], name='qemu')
 
     def _parse_net(self, parser, domain):
         """
