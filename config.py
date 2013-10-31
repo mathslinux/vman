@@ -1,4 +1,4 @@
-from ConfigParser import ConfigParser, NoOptionError
+from ConfigParser import ConfigParser, NoOptionError, NoSectionError
 from excp import ConfigError
 import xml.etree.cElementTree as ET
 import glob
@@ -135,12 +135,16 @@ class VMConfig(object):
 
     def _parse_display(self, parser, domain):
         devices = domain.find('devices')
-        d_type = parser.get('display', 'type')
-        d_port = parser.get('display', 'port')
+        try:
+            d_type = parser.get('display', 'type')
+            d_port = parser.get('display', 'port')
 
-        display = ET.SubElement(devices, 'graphics', type=d_type, port=d_port,
+            display = ET.SubElement(devices, 'graphics', type=d_type, port=d_port,
                                 autoport='no')
-        ET.SubElement(display, 'listen', type='address', address='0.0.0.0')
+            ET.SubElement(display, 'listen', type='address', address='0.0.0.0')
+        except NoSectionError:
+            # Allow to define a VM which has no display device
+            pass
 
     def toxml(self):
         """Convert our config file to xml string libvirt needs to manager VM
