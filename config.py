@@ -106,7 +106,8 @@ class VMConfig(object):
             ET.SubElement(node, 'target', bus='virtio', dev=dev)
             ET.SubElement(node, 'address', type='pci', bus='0x00',
                           slot=slot, function='0x0')
-            ET.SubElement(node, 'driver', type=disk['format'], name='qemu')
+            ET.SubElement(node, 'driver', type=disk['format'], name='qemu',
+                          cache='none')
 
     def _parse_net(self, parser, domain):
         """
