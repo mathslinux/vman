@@ -13,6 +13,7 @@ import sys
 import traceback
 import logging
 from commands import run_command
+import excp
 
 LOG = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ def set_logger():
     logger.addHandler(ch)
 
 
+@excp.catches((KeyboardInterrupt, RuntimeError, excp.VmanError,))
 def main(args):
     if len(sys.argv) < 2:
         print "Usage: \n  vman <command> [options]"
