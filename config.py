@@ -150,6 +150,11 @@ class VMConfig(object):
             # Allow to define a VM which has no display device
             pass
 
+    def _parse_other(self, parser, domain):
+        # By default, libvirt do not enable ACPI for VM, enable it.
+        features = ET.SubElement(domain, 'features')
+        ET.SubElement(features, 'acpi')
+
     def toxml(self):
         """Convert our config file to xml string libvirt needs to manager VM
         """
@@ -167,5 +172,6 @@ class VMConfig(object):
         self._parse_disk(p, domain)
         self._parse_net(p, domain)
         self._parse_display(p, domain)
+        self._parse_other(p, domain)
 
         return ET.tostring(domain)
