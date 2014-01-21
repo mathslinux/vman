@@ -11,7 +11,7 @@ class VMManager(object):
 
     def up(self, xml):
         conn = libvirt.open('qemu:///system')
-        conn.createXML(xml)
+        conn.createXML(xml, 0)
         conn.close()
 
     def down(self, name):
