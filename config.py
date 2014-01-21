@@ -33,6 +33,9 @@ class VMConfig(object):
         vm_name.text = self.name
 
     def _parse_cpu(self, parser, domain):
+        # define CPU model, use host-model by default
+        ET.SubElement(domain, 'cpu', mode='host-model')
+
         cpu_num = parser.get('cpu', 'number')
         if cpu_num > 0:
             cpu = ET.SubElement(domain, 'vcpu')
