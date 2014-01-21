@@ -11,12 +11,29 @@ vman remove vm1
 
 import sys
 import traceback
+import logging
 from commands import run_command
+
+LOG = logging.getLogger(__name__)
+
+
+def set_logger():
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('[%(name)s] [%(levelname)s] %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
 
 def main(args):
     if len(sys.argv) < 2:
         print "Usage: \n  vman <command> [options]"
         sys.exit(1)
+
+    set_logger()
 
     try:
         run_command(args[0], args)
