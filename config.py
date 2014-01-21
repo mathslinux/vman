@@ -27,7 +27,7 @@ class VMConfig(object):
 
     def _parse_general(self, parser, domain):
         os_tag = ET.SubElement(domain, 'os')
-        os_type = ET.SubElement(os_tag, 'type', arch='x86_64', machine='pc')
+        os_type = ET.SubElement(os_tag, 'type', arch='x86_64')
         os_type.text = 'hvm'
         vm_name = ET.SubElement(domain, 'name')
         vm_name.text = self.name
