@@ -10,10 +10,10 @@ vman remove vm1
 """
 
 import sys
-import traceback
 import logging
-from commands import run_command
 import excp
+import argparse
+import pkg_resources
 
 LOG = logging.getLogger(__name__)
 
@@ -29,18 +29,42 @@ def set_logger():
     logger.addHandler(ch)
 
 
+def create_parser():
+    parser = argparse.ArgumentParser(
+        prog='guest-tools',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description='Convenient tools for qemu guest image\n\n',
+        )
+    sub = parser.add_subparsers(
+        title='Commands',
+        metavar='COMMAND',
+        help='description',
+        )
+    entry_points = [
+        (e.name, e.load()) for e in pkg_resources.iter_entry_points('command')
+    ]
+    for (name, fn) in entry_points:
+        p = sub.add_parser(
+            name,
+            description=fn.__doc__,
+            help=fn.__doc__,
+        )
+        fn(p)
+    return parser
+
+
 @excp.catches((KeyboardInterrupt, RuntimeError, excp.VmanError,))
 def main(args):
+    parser = create_parser()
     if len(sys.argv) < 2:
-        print "Usage: \n  vman <command> [options]"
-        sys.exit(1)
+        parser.print_help()
+        sys.exit()
+    else:
+        args = parser.parse_args()
 
     set_logger()
 
-    try:
-        run_command(args[0], args)
-    except:
-        traceback.print_exc()
+    return args.func(args)
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    sys.exit(main())
