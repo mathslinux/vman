@@ -12,8 +12,9 @@ setup(
     url='https://github.com/mathslinux/vman',
     entry_points={
         'command': [
-            'add = add:make',
-            'delete = delete:make',
+            'new = new:make',
+            'edit = edit:make',
+            'rm = rm:make',
             'dev-add = dev:make',
             'list = list:make',
             'show = show:make',

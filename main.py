@@ -31,9 +31,9 @@ def set_logger():
 
 def create_parser():
     parser = argparse.ArgumentParser(
-        prog='guest-tools',
+        prog='vman',
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description='Convenient tools for qemu guest image\n\n',
+        description="""a command-line, convenient virtual machine management tool\n\n""",
         )
     sub = parser.add_subparsers(
         title='Commands',
@@ -54,7 +54,7 @@ def create_parser():
 
 
 @excp.catches((KeyboardInterrupt, RuntimeError, excp.VmanError,))
-def main(args):
+def main():
     parser = create_parser()
     if len(sys.argv) < 2:
         parser.print_help()
