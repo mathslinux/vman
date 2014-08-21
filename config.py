@@ -3,7 +3,7 @@ from excp import ConfigError
 import xml.etree.cElementTree as ET
 import glob
 
-vman_config = '/tmp/vman.conf'
+vman_config = 'vman.cfg'
 
 
 class VmanConfig(object):

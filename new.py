@@ -22,6 +22,8 @@ def new(args):
         disk = 'disk.%d' % (i)
         parser.add_section(disk)
         parser.set(disk, 'file', entry)
+        # Now, only qcow2 format is supported
+        parser.set(disk, 'format', 'qcow2')
         parser.set(disk, 'index', str(i + 1))
         i += 1
 

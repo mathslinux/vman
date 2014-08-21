@@ -18,6 +18,8 @@ setup(
             'dev-add = dev:make',
             'list = list:make',
             'show = show:make',
+            'up = commands:make_up',
+            'down = commands:make_down',
         ],
     }
 )

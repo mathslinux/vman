@@ -155,3 +155,37 @@ commands = {
 
 def run_command(name, args):
     commands[name](args).run()
+
+
+def up(args):
+    c = VMConfig(args.name)
+    manager = VMManager()
+    manager.up(c.toxml())
+
+
+def down(args):
+    manager = VMManager()
+    manager.down(args.name)
+    return
+
+
+def make_up(parser):
+    """
+    Run a VM
+    """
+    parser.add_argument(
+        'name',
+        help='name of VM to be up'
+    )
+    parser.set_defaults(func=up)
+
+
+def make_down(parser):
+    """
+    Shutdown a VM
+    """
+    parser.add_argument(
+        'name',
+        help='name of VM to be shutdown'
+    )
+    parser.set_defaults(func=down)
