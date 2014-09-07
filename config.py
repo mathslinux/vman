@@ -123,6 +123,8 @@ class VMConfig(object):
         self._parse_device_section(parser, 'net', ['mac', 'index'])
         devices = domain.find('devices')
         bridges = [b.split('/')[-2] for b in glob.glob('/sys/class/net/*/bridge')]
+        if 'virbr0' in bridges:
+            bridges.remove('virbr0')
         net_list = self._parse_device_section(parser, 'net', ['mac', 'index'])
         # TODO: NAT support, index limitation
         if bridges:
