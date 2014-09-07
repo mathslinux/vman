@@ -14,6 +14,16 @@ class VMManager(object):
         conn.createXML(xml, 0)
         conn.close()
 
+    def list_vm_names(self):
+        """Get all vm names managered by libvirt
+        """
+        conn = libvirt.open('qemu:///system')
+        dms = []
+        for dm in conn.listAllDomains():
+            dms.append(dm.name())
+        conn.close()
+        return dms
+
     def down(self, name):
         conn = libvirt.open('qemu:///system')
         try:
