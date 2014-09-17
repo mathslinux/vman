@@ -60,6 +60,7 @@ def new(args):
     parser.set(args.name, 'config', vm_cfg)
     parser.write(open(vman_config, 'w'))
 
+
 def make(parser):
     """
     Create a new virtual machine
